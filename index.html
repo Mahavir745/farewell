@@ -241,7 +241,7 @@
   /* ===== GALLERY SLIDE ===== */
   #gallerySlide{ padding:0; }
   .gallery-bg{ position:absolute; inset:0; overflow:hidden; }
-  .gb-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; opacity:0; transition:opacity 1.4s ease; }
+  .gb-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transition:opacity 1.4s ease; }
   .gb-img.g-active{ opacity:1; animation:kenBurns 9s ease-in-out forwards; }
   @keyframes kenBurns{ from{transform:scale(1) translate(0%,0%);} to{transform:scale(1.1) translate(-1.5%,-1%);} }
   .gallery-vignette{ position:absolute; inset:0; background:linear-gradient(to top, rgba(14,43,38,0.9) 0%, rgba(14,43,38,0.05) 50%, rgba(14,43,38,0.55) 100%); pointer-events:none; z-index:1; }
