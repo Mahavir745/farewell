@@ -620,66 +620,33 @@ function stopGallerySlide(){
   stopViolin();
 }
 
-// ---- emotional string pad (Web Audio API) ----
-let vCtx = null, vMaster = null, vLoopTimer = null;
-const MELODY = [
-  {f:293.66,d:3.2},{f:349.23,d:2.8},{f:440.00,d:3.2},{f:392.00,d:2.5},
-  {f:349.23,d:2.5},{f:466.16,d:2.2},{f:440.00,d:2.5},{f:392.00,d:2.0},
-  {f:349.23,d:2.0},{f:293.66,d:4.5}
-];
-const LOOP_DUR = MELODY.reduce((s,n)=>s+n.d, 0);
+// ---- farewell song (friendship.mp3) ----
+const farewellAudio = new Audio('./mp3/friendship.mp3');
+farewellAudio.loop = true;
+farewellAudio.volume = 0;
 
-function playNote(ctx, out, freq, t, dur){
-  const o1=ctx.createOscillator(), o2=ctx.createOscillator();
-  const env=ctx.createGain(), lpf=ctx.createBiquadFilter();
-  const lfo=ctx.createOscillator(), lfoG=ctx.createGain();
-  o1.type='triangle'; o2.type='triangle';
-  o1.frequency.value=freq; o2.frequency.value=freq*1.005;
-  lfo.frequency.value=5.2; lfoG.gain.value=freq*0.007;
-  lfo.connect(lfoG); lfoG.connect(o1.frequency); lfoG.connect(o2.frequency);
-  lpf.type='lowpass'; lpf.frequency.value=1800;
-  env.gain.setValueAtTime(0,t);
-  env.gain.linearRampToValueAtTime(0.16,t+0.9);
-  env.gain.setValueAtTime(0.16,t+dur-1.1);
-  env.gain.linearRampToValueAtTime(0,t+dur);
-  o1.connect(lpf); o2.connect(lpf); lpf.connect(env); env.connect(out);
-  [lfo,o1,o2].forEach(o=>{o.start(t);o.stop(t+dur+0.2);});
-}
+let fadeInterval = null;
 
 function startViolin(){
-  if(vCtx) return;
-  try{ vCtx = new (window.AudioContext||window.webkitAudioContext)(); }
-  catch(e){ return; }
-  vCtx.resume();
-  vMaster = vCtx.createGain(); vMaster.gain.value=0;
-  const d1=vCtx.createDelay(2), d2=vCtx.createDelay(2);
-  const f1=vCtx.createGain(), f2=vCtx.createGain(), rMix=vCtx.createGain();
-  d1.delayTime.value=0.27; d2.delayTime.value=0.39;
-  f1.gain.value=0.33; f2.gain.value=0.28; rMix.gain.value=0.38;
-  vMaster.connect(d1); vMaster.connect(d2);
-  d1.connect(f1); f1.connect(d1); d1.connect(rMix);
-  d2.connect(f2); f2.connect(d2); d2.connect(rMix);
-  rMix.connect(vCtx.destination); vMaster.connect(vCtx.destination);
-  vMaster.gain.setValueAtTime(0,vCtx.currentTime);
-  vMaster.gain.linearRampToValueAtTime(1,vCtx.currentTime+2.5);
-  function scheduleLoop(){
-    if(!vCtx) return;
-    let t = vCtx.currentTime+0.05;
-    MELODY.forEach(n=>{ playNote(vCtx,vMaster,n.f,t,n.d*1.1); t+=n.d; });
-    vLoopTimer = setTimeout(scheduleLoop,(LOOP_DUR-1.5)*1000);
-  }
-  scheduleLoop();
+  clearInterval(fadeInterval);
+  farewellAudio.currentTime = 0;
+  farewellAudio.play().catch(()=>{});
+  let vol = 0;
+  fadeInterval = setInterval(()=>{
+    vol = Math.min(1, vol + 0.04);
+    farewellAudio.volume = vol;
+    if(vol >= 1) clearInterval(fadeInterval);
+  }, 100);
 }
 
 function stopViolin(){
-  clearTimeout(vLoopTimer);
-  if(!vCtx) return;
-  const g=vMaster, c=vCtx; vCtx=null; vMaster=null;
-  try{
-    g.gain.setValueAtTime(g.gain.value,c.currentTime);
-    g.gain.linearRampToValueAtTime(0,c.currentTime+1.5);
-    setTimeout(()=>{try{c.close();}catch(e){}},2000);
-  }catch(e){}
+  clearInterval(fadeInterval);
+  let vol = farewellAudio.volume;
+  fadeInterval = setInterval(()=>{
+    vol = Math.max(0, vol - 0.05);
+    farewellAudio.volume = vol;
+    if(vol <= 0){ farewellAudio.pause(); clearInterval(fadeInterval); }
+  }, 80);
 }
 </script>
 </body>
